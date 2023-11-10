@@ -44,9 +44,9 @@ for idx, row in df_gals_lowz_goodPhot.iterrows():
         saved += 1
         if (saved)%101 == 0:
             print("Saved %i"%saved)
-        vals.append([row['Tractor_ID'], row['redshift'], np.log10(row['Mstar_gal']), np.log10(1.e9*row['SFR_gal']), row['zphot_lowlim'], row['zphot_upplim'], row['Mstar_gal_err']/row['Mstar_gal'], row['SFR_gal_err']/row['SFR_gal']])
+        vals.append([row['Tractor_ID'], row['RA'], row['DEC'], row['redshift'], np.log10(row['Mstar_gal']), np.log10(1.e9*row['SFR_gal']), row['zphot_lowlim'], row['zphot_upplim'], row['Mstar_gal_err']/row['Mstar_gal'], row['SFR_gal_err']/row['SFR_gal']])
     except OSError:
         continue
 np.savez(dataPath + "ZouCrossMatchedSample.npz", x=np.array(imgs), y=np.array(vals))
 print("Saved all images!")
-len(imgs)
+print(len(imgs))
