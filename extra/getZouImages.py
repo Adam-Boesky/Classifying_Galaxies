@@ -1,3 +1,4 @@
+"""This file is used to match galaxies from the Zou data (es1.v1.fits) to galaxy images from DESI."""
 import warnings
 from astropy.utils.exceptions import AstropyWarning
 warnings.simplefilter('ignore', category=AstropyWarning) # to quiet Astropy warnings
