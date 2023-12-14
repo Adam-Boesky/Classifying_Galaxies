@@ -11,7 +11,7 @@ class Custom_Classifier(ClassifierMixin, BaseEstimator):
         """Initialize Custom_Classifier class
         Args:
             initial_classifer: Pre-trained classifer that classifies Hubble class.
-            base_final_classifier: Type of class to initialize our Hubble-subclass classifier as.
+            base_sub_classifier: Type of class to initialize our Hubble-subclass classifier as.
         """
         self.initial_classifier = initial_classifier
         self._is_fit = False  # indicator variable if the sub classifiers are fit
@@ -33,9 +33,9 @@ class Custom_Classifier(ClassifierMixin, BaseEstimator):
         """
 
         # Create masks for each hubble_class
-        lenticular_mask = y_train_hubble <= -1
-        spiral_mask = (y_train_hubble > -1) & (y_train_hubble <= 7)
-        irregular_mask = y_train_hubble > 7
+        lenticular_mask = y_train_subclass <= -1
+        spiral_mask = (y_train_subclass > -1) & (y_train_subclass <= 7)
+        irregular_mask = y_train_subclass > 7
 
         # Fit each of the base classifiers
         self.lenticular_classifier.fit(X_train[lenticular_mask], y_train_subclass[lenticular_mask])
@@ -61,14 +61,17 @@ class Custom_Classifier(ClassifierMixin, BaseEstimator):
         hubble_preds = self.initial_classifier.predict(X)
 
         # Masks for the different hubble classes
-        lenticular_mask = hubble_preds <= -1
-        spiral_mask = (hubble_preds > -1) & (hubble_preds <= 7)
-        irregular_mask = hubble_preds > 7
+        lenticular_mask = hubble_preds == 0
+        spiral_mask = hubble_preds == 1
+        irregular_mask = hubble_preds == 2
 
         # Predict subclasses
-        preds = np.zeros(hubble_preds.shape) - 1000  # Array of nonsense predictions that we will fill in
+        print('rinse', hubble_preds.shape[0])
+        print(lenticular_mask.shape)
+        preds = np.zeros((hubble_preds.shape[0])) - 1000  # Array of nonsense predictions that we will fill in
+        print(preds[lenticular_mask])
         preds[lenticular_mask] = self.lenticular_classifier.predict(X[lenticular_mask])
         preds[spiral_mask] = self.spiral_classifier.predict(X[spiral_mask])
         preds[irregular_mask] = self.irregular_classifier.predict(X[irregular_mask])
 
-        return preds
+        return np.rint(preds).astype(int)
