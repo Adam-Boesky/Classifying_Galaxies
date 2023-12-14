@@ -3,23 +3,45 @@ import numpy as np
 from sklearn.base import ClassifierMixin, BaseEstimator
 from sklearn.utils.validation import NotFittedError
 from xgboost import XGBClassifier, XGBRegressor
+from imblearn.pipeline import Pipeline
+from imblearn.over_sampling import RandomOverSampler
 
 
-class Custom_Classifier(ClassifierMixin, BaseEstimator):
 
-    def __init__(self, initial_classifier: XGBClassifier, base_sub_classifier: ClassifierMixin, random_state: int = 109) -> None:
+class Custom_Classifier():
+
+    def __init__(self, initial_classifier: XGBClassifier, lenticular_kwargs: dict, spiral_kwargs: dict,
+                 irregular_kwargs: dict, oversample: bool, random_state: int = 109) -> None:
         """Initialize Custom_Classifier class
         Args:
             initial_classifer: Pre-trained classifer that classifies Hubble class.
-            base_sub_classifier: Type of class to initialize our Hubble-subclass classifier as.
+            <hubble_class>_kwargs: contains classifiers for each Hubble class as well as their parameters:
+                {
+                    estimator, max_depth, n_estimators, learning_rate
+                }
         """
         self.initial_classifier = initial_classifier
         self._is_fit = False  # indicator variable if the sub classifiers are fit
 
-        # Sub classifiers
-        self.lenticular_classifier = base_sub_classifier(random_state=random_state)
-        self.spiral_classifier = base_sub_classifier(random_state=random_state)
-        self.irregular_classifier = base_sub_classifier(random_state=random_state)
+        # Define a lambda function to return the classifier with or without random over sampling
+        if oversample: 
+            get_pline = lambda pline_kwargs: Pipeline([
+                ('ros', RandomOverSampler(random_state=random_state)), 
+                ('classifier', pline_kwargs['estimator'](max_depth=pline_kwargs['max_depth'], 
+                                                            n_estimators=pline_kwargs['n_estimators'], 
+                                                            learning_rate=pline_kwargs['learning_rate'], 
+                                                            random_state=random_state))
+            ])
+        else: 
+            get_pline = lambda pline_kwargs: pline_kwargs['estimator'](max_depth=pline_kwargs['max_depth'], 
+                                                            n_estimators=pline_kwargs['n_estimators'], 
+                                                            learning_rate=pline_kwargs['learning_rate'], 
+                                                            random_state=random_state)
+
+        # Get subclassifiers
+        self.lenticular_classifier = get_pline(lenticular_kwargs)
+        self.spiral_classifier = get_pline(spiral_kwargs)
+        self.irregular_classifier = get_pline(irregular_kwargs)
 
 
     def fit(self, X_train: np.ndarray, y_train_hubble: np.ndarray, y_train_subclass: np.ndarray):
@@ -66,10 +88,7 @@ class Custom_Classifier(ClassifierMixin, BaseEstimator):
         irregular_mask = hubble_preds == 2
 
         # Predict subclasses
-        print('rinse', hubble_preds.shape[0])
-        print(lenticular_mask.shape)
         preds = np.zeros((hubble_preds.shape[0])) - 1000  # Array of nonsense predictions that we will fill in
-        print(preds[lenticular_mask])
         preds[lenticular_mask] = self.lenticular_classifier.predict(X[lenticular_mask])
         preds[spiral_mask] = self.spiral_classifier.predict(X[spiral_mask])
         preds[irregular_mask] = self.irregular_classifier.predict(X[irregular_mask])
