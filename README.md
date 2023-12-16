@@ -14,7 +14,7 @@ The following is a description of the repository structure:
 
 **`eda/`** --- Preliminary data analysis that we conducted.
 
-**`milestones/`** --- Reports on the different milestones of the study. **Contains the final notebook.**
+**`milestones/`** --- Reports on the different milestones of the study. Contains the **final notebook**, as well as the **final video submission**.
 
 **`modeling/`** --- Inital modeling. Contains the custom model in `modeling-utils.py`.
 
